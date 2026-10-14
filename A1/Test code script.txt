@@ -1,0 +1,89 @@
+%%cuda_group_save -g "source" -n "main.cu"
+/**
+ * Driver for the benchmark comparison. Generates random data,
+ * runs the CPU baseline, and then runs your code.
+ */
+
+#include <cstddef>  // std::size_t type
+#include <iostream> // std::cout, std::endl
+#include <vector>
+
+#include "algorithm_choices.h"
+#include "data_generator.h"
+#include "data_types.h"
+#include "cuda_common.h"
+
+int main() {
+    std::vector<std::size_t> test_sizes =
+    {
+        4, 
+        8,
+        16,
+        32,
+        64,
+        128,
+        256,
+        512,
+        1024
+    };
+
+    for (std::size_t n : test_sizes)
+    {
+        std::size_t const switch_at =
+            3 * (n >> 2);
+
+        std::cout << "\n⊹₊˚‧︵‿₊⊱·✶·⊰₊‿︵‧˚₊⊹⊹₊˚‧︵‿₊⊱·✶·⊰₊‿︵‧˚₊⊹⊹₊˚‧︵‿₊⊱·✶·⊰₊‿︵‧˚₊⊹\n";
+        std::cout << "n = "
+                  << n
+                  << std::endl;
+
+        std::cout << "switch_at = "
+                  << switch_at
+                  << std::endl;
+
+        auto data =
+            csc485b::a1::generate_uniform<element_t>(n);
+
+        std::cout << "Input sample: ";
+
+        std::size_t display_count =
+            std::min((std::size_t)8, data.size());
+
+        // First 8 elements
+        for (std::size_t i = 0;
+             i < display_count;
+             ++i)
+        {
+            std::cout << data[i] << " ";
+        }
+
+        // Last 8 elements
+        if (data.size() > 16)
+        {
+            std::cout << "... ";
+
+            for (std::size_t i = data.size() - display_count;
+                 i < data.size();
+                 ++i)
+            {
+                std::cout << data[i] << " ";
+            }
+        }
+
+        std::cout << std::endl;
+
+        csc485b::a1::cpu::run_cpu_baseline(
+            data,
+            switch_at,
+            n);
+
+        csc485b::a1::gpu::run_gpu_soln(
+            data,
+            switch_at,
+            n);
+    }
+
+    return EXIT_SUCCESS;
+}
+
+
